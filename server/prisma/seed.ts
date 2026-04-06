@@ -1,22 +1,32 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding database...');
+  console.log('Seeding database...');
+
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be set in environment variables');
+  }
 
   const existingAdmin = await prisma.user.findUnique({
-    where: { email: 'admin@educationaltoycentre.com' },
+    where: { email: adminEmail },
   });
 
   if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash('Admin@2026', 12);
+    const passwordHash = await bcrypt.hash(adminPassword, 12);
 
     await prisma.user.create({
       data: {
         name: 'Admin',
-        email: 'admin@educationaltoycentre.com',
+        email: adminEmail,
         passwordHash,
         role: 'ADMIN',
         isVerified: true,
@@ -24,10 +34,10 @@ async function main() {
     });
 
     console.log('✅ Admin user created');
-    console.log('   Email: admin@educationaltoycentre.com');
-    console.log('   Password: Admin@2026');
+    console.log('   Email: ' + adminEmail);
+    console.log('   Password: ' + adminPassword);
   } else {
-    console.log('ℹ️  Admin user already exists, skipping');
+    console.log('ℹ  Admin user already exists, skipping');
   }
 
   console.log('✅ Seeding complete');
