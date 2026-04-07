@@ -33,21 +33,44 @@ enum SenderRole {
 }
 
 model User {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   name         String
-  email        String   @unique
+  email        String    @unique
   passwordHash String
   phone        String?
-  role         Role     @default(USER)
-  isVerified   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role         Role      @default(USER)
+  isVerified   Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  orders   Order[]
-  messages Message[]
-  cart     Cart?
+  orders           Order[]
+  messages         Message[]
+  cart             Cart?
+  refreshTokens    RefreshToken[]
+  otpVerifications OtpVerification[]
 
   @@index([email])
+}
+
+enum OtpPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model OtpVerification {
+  id        String     @id @default(uuid())
+  userId    String
+  email     String
+  otpHash   String
+  purpose   OtpPurpose
+  attempts  Int        @default(0)
+  expiresAt DateTime
+  createdAt DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([userId])
 }
 
 model Product {
@@ -142,6 +165,8 @@ model RefreshToken {
   userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([userId])
