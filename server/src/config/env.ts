@@ -11,6 +11,9 @@ const envSchema = z.object({
   EMAIL_USER: z.string().min(1, 'EMAIL_USER is required'),
   EMAIL_PASS: z.string().min(1, 'EMAIL_PASS is required'),
   EMAIL_FROM: z.string().min(1, 'EMAIL_FROM is required'),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required'),
+  CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required'),
+  CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required'),
   FRONTEND_URL: z.string().default('http://localhost:5173'),
 });
 
