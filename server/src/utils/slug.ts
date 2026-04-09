@@ -13,12 +13,17 @@ export const generateSlug = (name: string): string => {
 export const createUniqueSlug = async (name: string): Promise<string> => {
   const baseSlug = generateSlug(name);
 
-  const existing = await prisma.product.findUnique({
-    where: { slug: baseSlug },
-  });
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const candidate =
+      attempt === 0 ? baseSlug : `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`;
 
-  if (!existing) return baseSlug;
+    const existing = await prisma.product.findUnique({
+      where: { slug: candidate },
+    });
 
-  const suffix = crypto.randomBytes(3).toString('hex');
-  return `${baseSlug}-${suffix}`;
+    if (!existing) return candidate;
+  }
+
+  const fallback = `${baseSlug}-${Date.now()}`;
+  return fallback;
 };

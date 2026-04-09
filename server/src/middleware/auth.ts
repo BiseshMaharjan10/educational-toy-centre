@@ -7,13 +7,13 @@ export const verifyToken = (
   res: Response,
   next: NextFunction
 ): void => {
-  const authHeander = req.header('authorization');
+  const authHeader = req.header('authorization');
 
 
-  if (!authHeander || !authHeander.startsWith('Bearer ')) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return next(new AppError("No Tokens Provided", 401));
   }
-  const token = authHeander.split('')[1];
+  const token = authHeader.split(' ')[1];
 
   try{
     const payload = verifyAccessToken(token);
@@ -29,7 +29,7 @@ export const verifyAdmin = (
   res: Response,
   next: NextFunction
 ): void => {
-  if (!req.user || req.user.role !== 'admin'){
+  if (!req.user || req.user.role !== 'ADMIN'){
     return next(new AppError("Admin access required", 403));
   }
   next();

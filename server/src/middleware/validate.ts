@@ -16,7 +16,7 @@ export const validate = (schema: z.ZodType) =>
           success: false,
           message: 'Validation Error',
           errors: error.issues.map((err) => ({
-            path: err.path[1],
+            path: err.path.length > 1 ? err.path.slice(1).join('.') : err.path.join('.'),
             message: err.message,
           })),
         });
