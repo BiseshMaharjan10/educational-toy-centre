@@ -251,11 +251,20 @@ export const refreshAccessToken = async (token: string) => {
     throw new AppError('No refresh token provided', StatusCodes.UNAUTHORIZED);
   }
 
-  const payload = verifyRefreshToken(token);
+  let payload;
+  try {
+    payload = verifyRefreshToken(token);
+  } catch {
+    throw new AppError('Invalid or expired refresh token', StatusCodes.UNAUTHORIZED);
+  }
 
   const storedToken = await prisma.refreshToken.findUnique({ where: { token } });
 
-  if (!storedToken || storedToken.expiresAt < new Date()) {
+  if (
+    !storedToken ||
+    storedToken.expiresAt < new Date() ||
+    storedToken.userId !== payload.userId
+  ) {
     throw new AppError('Invalid or expired refresh token', StatusCodes.UNAUTHORIZED);
   }
 

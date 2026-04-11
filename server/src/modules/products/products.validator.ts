@@ -52,6 +52,13 @@ export const productQuerySchema = z.object({
   }),
 });
 
+export const stockUpdateSchema = z.object({
+  body: z.object({
+    stock: z.coerce.number().int('Stock must be an integer').min(0, 'Stock must be a non-negative number'),
+  }),
+});
+
 export type CreateProductInput = z.infer<typeof createProductSchema>['body'];
 export type UpdateProductInput = z.infer<typeof updateProductSchema>['body'];
 export type ProductQueryInput = z.infer<typeof productQuerySchema>['query'];
+export type StockUpdateInput = z.infer<typeof stockUpdateSchema>['body'];
