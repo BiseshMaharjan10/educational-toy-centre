@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import request from 'supertest';
-import type { Express } from 'express';
+import type { Application } from 'express';
 
-let app: Express;
+let app: Application;
 let prisma: any;
 let userAccessToken = '';
 
