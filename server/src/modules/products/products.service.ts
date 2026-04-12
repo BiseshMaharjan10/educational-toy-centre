@@ -229,7 +229,7 @@ export const getPublicProducts = async (query: ProductQueryInput) => {
 };
 
 export const getProductBySlug = async (slug: string) => {
-  const product = await prisma.product.findUnique({
+  const product = await prisma.product.findFirst({
     where: { slug, isActive: true },
     select: {
       id: true,

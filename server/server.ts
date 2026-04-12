@@ -18,3 +18,12 @@ const startServer = async () => {
 };
 
 startServer();
+
+const shutdown = async () => {
+  console.log('Shutting down gracefully...');
+  await prisma.$disconnect();
+  process.exit(0);
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);

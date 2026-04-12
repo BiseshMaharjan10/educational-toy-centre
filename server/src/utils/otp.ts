@@ -2,12 +2,14 @@ import crypto from 'crypto';
 import { env } from '../config/env';
 
 export const generateOTP = (): string => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 1000000).toString();
 };
 
 export const hashOTP = (otp: string): string => {
+  const secret = env.OTP_SECRET ?? env.JWT_ACCESS_SECRET;
+
   return crypto
-    .createHmac('sha256', env.JWT_ACCESS_SECRET)
+    .createHmac('sha256', secret)
     .update(otp)
     .digest('hex');
 };

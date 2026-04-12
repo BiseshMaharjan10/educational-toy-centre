@@ -2,6 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import prisma from '../../config/prisma';
 import { AppError } from '../../middleware/errorHandler';
 import { sendEmail } from '../../config/email';
+import { escapeHtml } from '../../utils/html';
 import type {
   PlaceOrderInput,
   UpdateOrderStatusInput,
@@ -355,17 +356,17 @@ const newOrderNotificationTemplate = (
     <h2 style="color: #1A2F4A;">New Order Received</h2>
     <p>A new order has been placed on your store.</p>
     <div style="background: #F5C518; padding: 16px; border-radius: 8px; margin: 16px 0;">
-      <h3 style="color: #1A2F4A; margin: 0;">Order ID: #${orderId.slice(0, 8).toUpperCase()}</h3>
+      <h3 style="color: #1A2F4A; margin: 0;">Order ID: #${escapeHtml(orderId.slice(0, 8).toUpperCase())}</h3>
     </div>
     <h4>Customer</h4>
-    <p>${customerName} — ${customerEmail}</p>
+    <p>${escapeHtml(customerName)} — ${escapeHtml(customerEmail)}</p>
     <h4>Items Ordered</h4>
-    <pre style="background: #f5f5f5; padding: 12px; border-radius: 4px;">${itemsList}</pre>
+    <pre style="background: #f5f5f5; padding: 12px; border-radius: 4px;">${escapeHtml(itemsList)}</pre>
     <h4>Delivery Address</h4>
-    <p>${address.fullName}<br/>
-    ${address.phone}<br/>
-    ${address.address}, ${address.city}<br/>
-    ${address.landmark ? `Landmark: ${address.landmark}` : ''}</p>
+    <p>${escapeHtml(address.fullName)}<br/>
+    ${escapeHtml(address.phone)}<br/>
+    ${escapeHtml(address.address)}, ${escapeHtml(address.city)}<br/>
+    ${address.landmark ? `Landmark: ${escapeHtml(address.landmark)}` : ''}</p>
     <p style="color: #666;">Log in to your admin panel to confirm or manage this order.</p>
   </div>
 `;
@@ -378,9 +379,9 @@ const orderStatusUpdateTemplate = (
 ): string => `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
     <h2 style="color: #1A2F4A;">Order Update</h2>
-    <p>Hi ${customerName},</p>
-    <p>Your order <strong>#${orderId.slice(0, 8).toUpperCase()}</strong> has been <strong>${status.toLowerCase()}</strong>.</p>
-    ${adminNote ? `<div style="background: #f5f5f5; padding: 12px; border-radius: 8px; margin: 16px 0;"><p style="margin: 0;"><strong>Message from us:</strong> ${adminNote}</p></div>` : ''}
+    <p>Hi ${escapeHtml(customerName)},</p>
+    <p>Your order <strong>#${escapeHtml(orderId.slice(0, 8).toUpperCase())}</strong> has been <strong>${escapeHtml(status.toLowerCase())}</strong>.</p>
+    ${adminNote ? `<div style="background: #f5f5f5; padding: 12px; border-radius: 8px; margin: 16px 0;"><p style="margin: 0;"><strong>Message from us:</strong> ${escapeHtml(adminNote)}</p></div>` : ''}
     ${status === 'CONFIRMED' ? '<p>We will contact you shortly to arrange delivery.</p>' : ''}
     ${status === 'CANCELLED' ? '<p>If you have any questions, please contact us.</p>' : ''}
     <p>— Educational Toy Centre Team</p>

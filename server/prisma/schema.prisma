@@ -73,6 +73,22 @@ model OtpVerification {
   @@index([userId])
 }
 
+model LoginAttempt {
+  id          String   @id @default(uuid())
+  email       String
+  ip          String
+  attempts    Int      @default(0)
+  lockedUntil DateTime?
+  escalation  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([email, ip])
+  @@index([email])
+  @@index([ip])
+  @@index([lockedUntil])
+}
+
 model Product {
   id          String   @id @default(uuid())
   name        String

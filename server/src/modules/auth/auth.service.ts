@@ -10,6 +10,12 @@ import {
 import { generateOTP, hashOTP, verifyOTP } from '../../utils/otp';
 import { sendEmail } from '../../config/email';
 import {
+  buildLoginKeys,
+  checkLoginLockout,
+  clearLoginFailures,
+  registerLoginFailure,
+} from '../../utils/loginLockout';
+import {
   otpVerificationTemplate,
   passwordResetTemplate,
 } from '../../utils/emailTemplates';
@@ -23,6 +29,15 @@ import type {
 
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
 const MAX_OTP_ATTEMPTS = 5;
+const LOGIN_TOO_MANY_ATTEMPTS_MESSAGE = 'Too many login attempts. Try again later.';
+
+const failLogin = async (email: string, ip?: string): Promise<never> => {
+  const lockout = await registerLoginFailure(buildLoginKeys(email, ip));
+  throw new AppError(
+    lockout.message ?? LOGIN_TOO_MANY_ATTEMPTS_MESSAGE,
+    StatusCodes.TOO_MANY_REQUESTS
+  );
+};
 
 export const registerUser = async (data: RegisterInput) => {
   const existingUser = await prisma.user.findUnique({
@@ -177,14 +192,25 @@ export const resendOtp = async (email: string) => {
   return { message: 'If an unverified account exists, a new OTP has been sent.' };
 };
 
-export const loginUser = async (data: LoginInput) => {
+export const loginUser = async (data: LoginInput, ip?: string) => {
+  const keys = buildLoginKeys(data.email, ip);
+  const lockout = await checkLoginLockout(keys);
+
+  if (lockout.locked) {
+    throw new AppError(
+      lockout.message ?? LOGIN_TOO_MANY_ATTEMPTS_MESSAGE,
+      StatusCodes.TOO_MANY_REQUESTS
+    );
+  }
+
   const user = await prisma.user.findUnique({ where: { email: data.email } });
 
   if (!user) {
-    throw new AppError('Invalid email or password', StatusCodes.UNAUTHORIZED);
+    return await failLogin(data.email, ip);
   }
 
   if (!user.isVerified) {
+    await registerLoginFailure(keys);
     throw new AppError(
       'Please verify your email before logging in.',
       StatusCodes.FORBIDDEN
@@ -194,8 +220,10 @@ export const loginUser = async (data: LoginInput) => {
   const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
 
   if (!isPasswordValid) {
-    throw new AppError('Invalid email or password', StatusCodes.UNAUTHORIZED);
+    return await failLogin(data.email, ip);
   }
+
+  await clearLoginFailures(keys);
 
   const accessToken = signAccessToken({ userId: user.id, role: user.role });
   const refreshToken = signRefreshToken({ userId: user.id, role: user.role });
@@ -215,18 +243,30 @@ export const loginUser = async (data: LoginInput) => {
   };
 };
 
-export const loginAdmin = async (data: LoginInput) => {
+export const loginAdmin = async (data: LoginInput, ip?: string) => {
+  const keys = buildLoginKeys(data.email, ip);
+  const lockout = await checkLoginLockout(keys);
+
+  if (lockout.locked) {
+    throw new AppError(
+      lockout.message ?? LOGIN_TOO_MANY_ATTEMPTS_MESSAGE,
+      StatusCodes.TOO_MANY_REQUESTS
+    );
+  }
+
   const user = await prisma.user.findUnique({ where: { email: data.email } });
 
   if (!user || user.role !== 'ADMIN') {
-    throw new AppError('Invalid credentials', StatusCodes.UNAUTHORIZED);
+    return await failLogin(data.email, ip);
   }
 
   const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
 
   if (!isPasswordValid) {
-    throw new AppError('Invalid credentials', StatusCodes.UNAUTHORIZED);
+    return await failLogin(data.email, ip);
   }
+
+  await clearLoginFailures(keys);
 
   const accessToken = signAccessToken({ userId: user.id, role: user.role });
   const refreshToken = signRefreshToken({ userId: user.id, role: user.role });

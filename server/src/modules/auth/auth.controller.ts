@@ -60,7 +60,7 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
   });
 });
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  const result = await authService.loginUser(req.body as LoginInput);
+  const result = await authService.loginUser(req.body as LoginInput, req.ip);
   res.cookie('refreshToken', result.refreshToken, COOKIE_OPTIONS);
   return res.status(StatusCodes.OK).json({
     success: true,
@@ -73,7 +73,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
-  const result = await authService.loginAdmin(req.body as LoginInput);
+  const result = await authService.loginAdmin(req.body as LoginInput, req.ip);
   res.cookie('refreshToken', result.refreshToken, COOKIE_OPTIONS);
   return res.status(StatusCodes.OK).json({
     success: true,

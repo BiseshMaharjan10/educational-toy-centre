@@ -23,6 +23,12 @@ const otpLimiter = rateLimit({
   message: { success: false, message: 'Too many OTP attempts. Try again in 15 minutes.' },
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Too many login attempts. Try again in 15 minutes.' },
+});
+
 const forgotPasswordLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
@@ -34,11 +40,11 @@ const router = Router();
 router.post('/register', registerLimiter, validate(registerSchema), authController.register);
 router.post('/verify-otp', otpLimiter, validate(verifyOtpSchema), authController.verifyOtp);
 router.post('/resend-otp', otpLimiter, validate(resendOtpSchema), authController.resendOtp);
-router.post('/login', validate(loginSchema), authController.login);
+router.post('/login', loginLimiter, validate(loginSchema), authController.login);
 router.post('/refresh', authController.refresh);
 router.post('/logout', authController.logout);
 router.post('/forgot-password', forgotPasswordLimiter, validate(forgotPasswordSchema), authController.forgotPassword);
 router.post('/reset-password', otpLimiter, validate(resetPasswordSchema), authController.resetPassword);
-router.post('/admin/login', validate(loginSchema), authController.adminLogin);
+router.post('/admin/login', loginLimiter, validate(loginSchema), authController.adminLogin);
 
 export default router;
