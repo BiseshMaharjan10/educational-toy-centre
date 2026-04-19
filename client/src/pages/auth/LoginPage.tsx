@@ -58,7 +58,11 @@ export default function LoginPage() {
         })
       )
 
-      navigate('/account', { replace: true })
+      if (res.data.user.role === 'ADMIN') {
+        navigate('/admin', { replace: true })
+      } else {
+        navigate('/', { replace: true })
+      }
     } catch (err: any) {
       const rawMessage = err?.data?.message || 'Login failed'
       const message = /invalid email|invalid credentials|unauthorized|not found/i.test(
