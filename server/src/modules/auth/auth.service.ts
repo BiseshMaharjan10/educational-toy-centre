@@ -209,7 +209,7 @@ export const loginUser = async (data: LoginInput, ip?: string) => {
     return await failLogin(data.email, ip);
   }
 
-  if (!user.isVerified) {
+  if (user.role !== 'ADMIN' && !user.isVerified) {
     await registerLoginFailure(keys);
     throw new AppError(
       'Please verify your email before logging in.',
@@ -308,12 +308,38 @@ export const refreshAccessToken = async (token: string) => {
     throw new AppError('Invalid or expired refresh token', StatusCodes.UNAUTHORIZED);
   }
 
+  const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+  if (!user) {
+    throw new AppError('User not found', StatusCodes.UNAUTHORIZED);
+  }
+
   const accessToken = signAccessToken({
-    userId: payload.userId,
-    role: payload.role,
+    userId: user.id,
+    role: user.role,
   });
 
-  return { accessToken };
+  // Rotate refresh token to keep active users signed in while expiring inactive sessions.
+  const refreshToken = signRefreshToken({
+    userId: user.id,
+    role: user.role,
+  });
+
+  await prisma.$transaction([
+    prisma.refreshToken.delete({ where: { token } }),
+    prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    }),
+  ]);
+
+  return {
+    accessToken,
+    refreshToken,
+    user: { id: user.id, name: user.name, email: user.email, role: user.role },
+  };
 };
 
 export const logoutUser = async (token: string) => {

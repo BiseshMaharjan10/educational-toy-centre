@@ -9,7 +9,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const baseClasses =
-	'inline-flex h-[3.5rem] items-center justify-between gap-4 px-7 text-[0.72rem] uppercase tracking-[0.28em] transition-colors'
+	'inline-flex h-[3.5rem] cursor-pointer items-center justify-between gap-4 px-7 text-[0.72rem] uppercase tracking-[0.28em] transition-colors disabled:cursor-not-allowed'
 
 const variantClasses: Record<ButtonVariant, string> = {
 	primary:

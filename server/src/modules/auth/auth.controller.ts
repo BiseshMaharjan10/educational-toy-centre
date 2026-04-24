@@ -96,9 +96,13 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const result = await authService.refreshAccessToken(token);
+  res.cookie('refreshToken', result.refreshToken, COOKIE_OPTIONS);
   return res.status(StatusCodes.OK).json({
     success: true,
-    data: result,
+    data: {
+      accessToken: result.accessToken,
+      user: result.user,
+    },
   });
 });
 
